@@ -53,6 +53,9 @@ begin
   try
     Output.CategoryIdentifier := GetCategoryIdentifier(aExtLink.Job.Caption);
     Output.CTime := aExtLink.HandleTime;
+    Output.RuTitle := aExtLink.ExtRecordValue['ru_title'];
+
+    Output.EnTitle := aExtLink.ChildExtLink[3].ExtRecordValue['en_title'];
 
     Output.Store;
   finally

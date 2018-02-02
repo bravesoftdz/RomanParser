@@ -11,12 +11,14 @@ type
   private
     FCategoryIdentifier: string;
     FCTime: TDateTime;
+    FEnTitle: string;
     FRuTitle: string;
   public
     class function GetStructure: TSructure; override;
   published
     property CategoryIdentifier: string read FCategoryIdentifier write FCategoryIdentifier;
     property CTime: TDateTime read FCTime write FCTime;
+    property EnTitle: string read FEnTitle write FEnTitle;
     property RuTitle: string read FRuTitle write FRuTitle;
   end;
 

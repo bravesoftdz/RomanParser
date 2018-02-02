@@ -20,11 +20,18 @@ type
     property Value: string read FValue write FValue;
   end;
 
+  TExtRecordList = TEntityAbstractList<TExtRecord>;
+
 implementation
+
+uses
+  eExtLink;
 
 class function TExtRecord.GetStructure: TSructure;
 begin
   Result.TableName := 'RECORDS';
+
+  AddForeignKey(Result.ForeignKeyArr, 'LINK_ID', TExtLink, 'ID');
 end;
 
 end.

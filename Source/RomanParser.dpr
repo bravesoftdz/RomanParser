@@ -20,7 +20,10 @@ uses
   eExtJob in 'eExtJob.pas',
   eOutput in 'eOutput.pas',
   API_Files in '..\..\Libs\Delphi\API_Files.pas',
-  eExtRecord in 'eExtRecord.pas';
+  eExtRecord in 'eExtRecord.pas',
+  API_Yandex in '..\..\Libs\Delphi\API_Yandex.pas',
+  API_HTTP in '..\..\Libs\Delphi\API_HTTP.pas',
+  API_Strings in '..\..\Libs\Delphi\API_Strings.pas';
 
 {$R *.res}
 

@@ -5,16 +5,36 @@ interface
 uses
   API_DB,
   API_MVC_DB,
+  API_Yandex,
   eExtLink,
   System.JSON;
 
 type
+  TTransCacheItem = record
+    Destination: string;
+    Source: string;
+    TransDirection: TTransDirection;
+  end;
+
+  TTransCache = TArray<TTransCacheItem>;
+
+  TTransCacheHelper = record helper for TTransCache
+  public
+    function TryToGet(aTransDirection: TTransDirection; const aSource: string): string;
+    procedure Add(aTransDirection: TTransDirection; const aSource, aDestination: string);
+  end;
+
   TModelWikiConvert = class(TModelDB)
   private
     FjsnJobCats: TJSONArray;
+    FTransCache: TTransCache;
+    FYaTranslater: TYaTranslater;
     function GetCategoryIdentifier(aCaption: string): string;
     function GetExtLink(aMaxExtLinkID: Integer): TExtLink;
     function GetMaxExtLink: Integer;
+    function GetOrTranslate(aChildExtLink: TExtLink; const aKey: string;
+      aTransDirection: TTransDirection; const aOrigValue: string): string;
+    function TryGet(aChildExtLink: TExtLink; const aKey: string): string;
     procedure ConvertExtLink(aExtLink: TExtLink);
   public
     inExtDBEngine: TDBEngine;
@@ -30,6 +50,69 @@ uses
   eOutput,
   FireDAC.Comp.Client,
   System.SysUtils;
+
+function TModelWikiConvert.TryGet(aChildExtLink: TExtLink; const aKey: string): string;
+begin
+  Result := aChildExtLink.ExtRecordValue[aKey];
+
+  if Result.IsEmpty and
+     (aChildExtLink.ChildExtLink[3] <> nil)
+  then
+    Result := aChildExtLink.ChildExtLink[3].ExtRecordValue[aKey];
+
+  if Result.IsEmpty and
+     (aChildExtLink.ChildExtLink[4] <> nil)
+  then
+    Result := aChildExtLink.ChildExtLink[4].ExtRecordValue[aKey];
+end;
+
+procedure TTransCacheHelper.Add(aTransDirection: TTransDirection; const aSource, aDestination: string);
+var
+  TransCacheItem: TTransCacheItem;
+begin
+  TransCacheItem.Destination := aDestination;
+  TransCacheItem.Source := aSource;
+  TransCacheItem.TransDirection := aTransDirection;
+
+  Self := Self + [TransCacheItem];
+end;
+
+function TTransCacheHelper.TryToGet(aTransDirection: TTransDirection; const aSource: string): string;
+var
+  TransCacheItem: TTransCacheItem;
+begin
+  Result := '';
+
+  for TransCacheItem in Self do
+    if (TransCacheItem.TransDirection = aTransDirection) and
+       (TransCacheItem.Source = aSource)
+    then
+      Exit(TransCacheItem.Destination);
+end;
+
+function TModelWikiConvert.GetOrTranslate(aChildExtLink: TExtLink; const aKey: string;
+  aTransDirection: TTransDirection; const aOrigValue: string): string;
+begin
+  Result := '';
+
+  if aChildExtLink <> nil then
+    Result := aChildExtLink.ExtRecordValue[aKey];
+
+  if Result.IsEmpty and
+     (aOrigValue.Length <= 255)
+  then
+    Result := FTransCache.TryToGet(aTransDirection, aOrigValue);
+
+  if not aOrigValue.IsEmpty and
+     Result.IsEmpty
+  then
+    begin
+      Result := FYaTranslater.Translate(aTransDirection, aOrigValue);
+      if Result.Length <= 255 then
+        FTransCache.Add(aTransDirection, aOrigValue, Result);
+    end;
+
+end;
 
 function TModelWikiConvert.GetCategoryIdentifier(aCaption: string): string;
 var
@@ -53,9 +136,31 @@ begin
   try
     Output.CategoryIdentifier := GetCategoryIdentifier(aExtLink.Job.Caption);
     Output.CTime := aExtLink.HandleTime;
-    Output.RuTitle := aExtLink.ExtRecordValue['ru_title'];
 
-    Output.EnTitle := aExtLink.ChildExtLink[3].ExtRecordValue['en_title'];
+    Output.RuTitle := aExtLink.ExtRecordValue['ru_title'];
+    Output.EnTitle := GetOrTranslate(aExtLink.ChildExtLink[3], 'en_title', tdRuEn, Output.RuTitle);
+    Output.UaTitle := GetOrTranslate(aExtLink.ChildExtLink[4], 'ua_title', tdRuUa, Output.RuTitle);
+
+    Output.RuCountry := aExtLink.ExtRecordValue['ru_country'];
+    Output.EnCountry := GetOrTranslate(aExtLink.ChildExtLink[3], 'en_country', tdRuEn, Output.RuCountry);
+    Output.UaCountry := GetOrTranslate(aExtLink.ChildExtLink[4], 'ua_country', tdRuUa, Output.RuCountry);
+
+    Output.RuCity := aExtLink.ExtRecordValue['ru_city'];
+    Output.EnCity := GetOrTranslate(aExtLink.ChildExtLink[3], 'en_city', tdRuEn, Output.RuCity);
+    Output.UaCity := GetOrTranslate(aExtLink.ChildExtLink[4], 'ua_city', tdRuUa, Output.RuCity);
+
+    Output.RuAddress := aExtLink.ExtRecordValue['ru_address'];
+    Output.EnAddress := GetOrTranslate(aExtLink.ChildExtLink[3], 'en_address', tdRuEn, Output.RuAddress);
+    Output.UaAddress := GetOrTranslate(aExtLink.ChildExtLink[4], 'ua_address', tdRuUa, Output.RuAddress);
+
+    Output.Email := TryGet(aExtLink, 'email');
+    Output.Skype := TryGet(aExtLink, 'skype');
+    Output.Phone := TryGet(aExtLink, 'phone');
+    Output.SiteURL := TryGet(aExtLink, 'site_url');
+
+    Output.RuContent := aExtLink.ExtRecordValue['ru_content'];
+    Output.EnContent := GetOrTranslate(aExtLink.ChildExtLink[3], 'en_content', tdRuEn, Output.RuContent);
+    Output.UaContent := GetOrTranslate(aExtLink.ChildExtLink[4], 'ua_content', tdRuUa, Output.RuContent);
 
     Output.Store;
   finally
@@ -101,30 +206,39 @@ procedure TModelWikiConvert.Start;
 var
   ConvertedLink: TConvertedLink;
   ExtLink: TExtLink;
+  ExtLinkID: Integer;
   MaxExtLinkID: Integer;
   strJobCats: string;
 begin
   strJobCats := TFilesEngine.GetTextFromFile(inJobCatFilePath);
+  FYaTranslater := TYaTranslater.Create;
   FjsnJobCats := TJSONObject.ParseJSONValue(strJobCats) as TJSONArray;
 
-  MaxExtLinkID := GetMaxExtLink;
-
-  ExtLink := GetExtLink(MaxExtLinkID);
   try
-    ConvertExtLink(ExtLink);
+    repeat
+      MaxExtLinkID := GetMaxExtLink;
+      ExtLink := GetExtLink(MaxExtLinkID);
+      try
+        ExtLinkID := ExtLink.ID;
+        ConvertExtLink(ExtLink);
+      finally
+        ExtLink.Free;
+      end;
 
-    ConvertedLink := TConvertedLink.Create;
-    try
-      ConvertedLink.ExtLinkID := ExtLink.ID;
-      ConvertedLink.Store;
-    finally
-      ConvertedLink.Free;
-    end;
+      ConvertedLink := TConvertedLink.Create;
+      try
+        ConvertedLink.ExtLinkID := ExtLinkID;
+        ConvertedLink.Store;
+      finally
+        ConvertedLink.Free;
+      end;
+
+    until ExtLinkID = 0;
+
   finally
-    ExtLink.Free;
+    FjsnJobCats.Free;
+    FYaTranslater.Free;
   end;
-
-  FjsnJobCats.Free;
 end;
 
 end.

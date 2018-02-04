@@ -31,13 +31,19 @@ implementation
 
 procedure TController.OnModelWikiConvertInit(aModel: TModelWikiConvert);
 begin
-  aModel.inExtDBEngine := FSQLiteEngine;
+  if aModel.TaskIndex > 0 then
+    begin
+
+    end
+  else
+    aModel.inExtDBEngine := FSQLiteEngine;
+
   aModel.inJobCatFilePath := 'D:\Git\RomanParser\DB\ext_jobs.json';
 end;
 
 procedure TController.StartWikiConvert;
 begin
-  CallModel<TModelWikiConvert>;
+  CallModel<TModelWikiConvert>(10);
 end;
 
 procedure TController.BeforeDestroy;

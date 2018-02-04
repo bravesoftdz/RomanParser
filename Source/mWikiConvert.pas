@@ -7,7 +7,8 @@ uses
   API_MVC_DB,
   API_Yandex,
   eExtLink,
-  System.JSON;
+  System.JSON,
+  System.SyncObjs;
 
 type
   TTransCacheItem = record
@@ -41,6 +42,9 @@ type
     inJobCatFilePath: string;
     procedure Start; override;
   end;
+
+var
+  CriticalSection: TCriticalSection;
 
 implementation
 
@@ -216,14 +220,11 @@ begin
 
   try
     repeat
+      CriticalSection.Enter;
+
       MaxExtLinkID := GetMaxExtLink;
       ExtLink := GetExtLink(MaxExtLinkID);
-      try
-        ExtLinkID := ExtLink.ID;
-        ConvertExtLink(ExtLink);
-      finally
-        ExtLink.Free;
-      end;
+      ExtLinkID := ExtLink.ID;
 
       ConvertedLink := TConvertedLink.Create;
       try
@@ -233,6 +234,14 @@ begin
         ConvertedLink.Free;
       end;
 
+      CriticalSection.Leave;
+
+      try
+        ConvertExtLink(ExtLink);
+      finally
+        ExtLink.Free;
+      end;
+
     until ExtLinkID = 0;
 
   finally
@@ -240,5 +249,11 @@ begin
     FYaTranslater.Free;
   end;
 end;
+
+initialization
+  CriticalSection := TCriticalSection.Create;
+
+finalization
+  CriticalSection.Free;
 
 end.

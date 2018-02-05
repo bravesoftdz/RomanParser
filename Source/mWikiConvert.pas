@@ -136,7 +136,7 @@ procedure TModelWikiConvert.ConvertExtLink(aExtLink: TExtLink);
 var
   Output: TOutput;
 begin
-  Output := TOutput.Create;
+  Output := TOutput.Create(FDBEngine);
   try
     Output.CategoryIdentifier := GetCategoryIdentifier(aExtLink.Job.Caption);
     Output.CTime := aExtLink.HandleTime;
@@ -166,6 +166,20 @@ begin
     Output.EnContent := GetOrTranslate(aExtLink.ChildExtLink[3], 'en_content', tdRuEn, Output.RuContent);
     Output.UaContent := GetOrTranslate(aExtLink.ChildExtLink[4], 'ua_content', tdRuUa, Output.RuContent);
 
+    Output.RuContacts := aExtLink.ExtRecordValue['ru_contacts'];
+    Output.EnContacts := TryGet(aExtLink, 'en_contacts');
+    Output.UaContacts := TryGet(aExtLink, 'ua_contacts');
+
+    Output.RuSource := aExtLink.Link;
+    if aExtLink.ChildExtLink[3] <> nil then
+      Output.EnSource := aExtLink.ChildExtLink[3].Link
+    else
+      Output.EnSource := Output.RuSource;
+    if aExtLink.ChildExtLink[4] <> nil then
+      Output.UaSource := aExtLink.ChildExtLink[4].Link
+    else
+      Output.UaSource := Output.RuSource;
+
     Output.Store;
   finally
     Output.Free;
@@ -185,7 +199,7 @@ begin
 
     ExtLinkID := dsQuery.Fields[0].AsInteger;
 
-    Result := TExtLink.Create(ExtLinkID);
+    Result := TExtLink.Create(inExtDBEngine, ExtLinkID);
   finally
     dsQuery.Free;
   end;
@@ -220,28 +234,33 @@ begin
 
   try
     repeat
-      CriticalSection.Enter;
-
-      MaxExtLinkID := GetMaxExtLink;
-      ExtLink := GetExtLink(MaxExtLinkID);
-      ExtLinkID := ExtLink.ID;
-
-      ConvertedLink := TConvertedLink.Create;
       try
+        CriticalSection.Enter;
+
+        MaxExtLinkID := GetMaxExtLink;
+        ExtLink := GetExtLink(MaxExtLinkID);
+        ExtLinkID := ExtLink.ID;
+
+        ConvertedLink := TConvertedLink.Create(FDBEngine);
         ConvertedLink.ExtLinkID := ExtLinkID;
         ConvertedLink.Store;
+
+        CriticalSection.Leave;
+
+        try
+          ConvertExtLink(ExtLink);
+        except
+          on E: Exception do
+            begin
+              ConvertedLink.Error := True;
+              ConvertedLink.ErrorMsg := E.Message;
+              ConvertedLink.Store;
+            end;
+        end;
       finally
         ConvertedLink.Free;
-      end;
-
-      CriticalSection.Leave;
-
-      try
-        ConvertExtLink(ExtLink);
-      finally
         ExtLink.Free;
       end;
-
     until ExtLinkID = 0;
 
   finally

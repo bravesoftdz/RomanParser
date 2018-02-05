@@ -33,6 +33,7 @@ type
     FJob: TExtJob;
     FJobID: Integer;
     FLevel: Integer;
+    FLink: string;
     FRecordList: TExtRecordList;
     function GetChildExtLink(const aLevel: Integer): TExtLink;
     function GetExtLinkRelList: TExtLinkRelList;
@@ -49,6 +50,7 @@ type
     property Job: TExtJob read FJob write FJob;
     property JobID: Integer read FJobID write FJobID;
     property Level: Integer read FLevel write FLevel;
+    property Link: string read FLink write FLink;
   end;
 
 implementation

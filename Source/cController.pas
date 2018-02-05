@@ -12,57 +12,37 @@ uses
 type
   TController = class(TControllerVCLDB)
   private
-    FSQLiteEngine: TSQLiteEngine;
+    function CreateSQLiteEngine: TSQLiteEngine;
     procedure InitDB(var aDBEngineClass: TDBEngineClass; out aConnectParams: TConnectParams;
       out aConnectOnCreate: Boolean); override;
-  protected
-    procedure AfterCreate; override;
-    procedure BeforeDestroy; override;
   published
     procedure OnModelWikiConvertInit(aModel: TModelWikiConvert);
     procedure StartWikiConvert;
   end;
 
-var
-  DBEngine: TDBEngine;
-  ExtDBEngine: TDBEngine;
-
 implementation
 
-procedure TController.OnModelWikiConvertInit(aModel: TModelWikiConvert);
+function TController.CreateSQLiteEngine: TSQLiteEngine;
+var
+  ConnectParams: TConnectParams;
 begin
-  if aModel.TaskIndex > 0 then
-    begin
+  ConnectParams.DataBase := 'D:\Git\RomanParser\DB\local_wiki.db';
 
-    end
-  else
-    aModel.inExtDBEngine := FSQLiteEngine;
+  Result := TSQLiteEngine.Create(ConnectParams);
+  Result.OpenConnection;
+end;
 
+procedure TController.OnModelWikiConvertInit(aModel: TModelWikiConvert);
+var
+  SQLiteEngine: TDBEngine;
+begin
+  aModel.inExtDBEngine := CreateSQLiteEngine;
   aModel.inJobCatFilePath := 'D:\Git\RomanParser\DB\ext_jobs.json';
 end;
 
 procedure TController.StartWikiConvert;
 begin
   CallModel<TModelWikiConvert>(10);
-end;
-
-procedure TController.BeforeDestroy;
-begin
-  FSQLiteEngine.CloseConnection;
-  FSQLiteEngine.Free;
-end;
-
-procedure TController.AfterCreate;
-var
-  ConnectParams: TConnectParams;
-begin
-  ConnectParams.DataBase := 'D:\Git\RomanParser\DB\local_wiki.db';
-
-  FSQLiteEngine := TSQLiteEngine.Create(ConnectParams);
-  FSQLiteEngine.OpenConnection;
-
-  cController.DBEngine := Self.DBEngine;
-  cController.ExtDBEngine := FSQLiteEngine;
 end;
 
 procedure TController.InitDB(var aDBEngineClass: TDBEngineClass; out aConnectParams: TConnectParams;

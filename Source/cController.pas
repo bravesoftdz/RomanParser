@@ -7,6 +7,7 @@ uses
   API_DB_MySQL,
   API_DB_SQLite,
   API_MVC_VCLDB,
+  mTAParser,
   mWikiConvert;
 
 type
@@ -16,11 +17,28 @@ type
     procedure InitDB(var aDBEngineClass: TDBEngineClass; out aConnectParams: TConnectParams;
       out aConnectOnCreate: Boolean); override;
   published
+    procedure OnModelTAParserInit(aModel: TModelTAParser);
     procedure OnModelWikiConvertInit(aModel: TModelWikiConvert);
+    procedure StartTAParser;
     procedure StartWikiConvert;
   end;
 
+const
+  JOBID_TA = 1;
+  TA_DOMEN = 'https://www.tripadvisor.ru';
+
 implementation
+
+procedure TController.OnModelTAParserInit(aModel: TModelTAParser);
+begin
+  aModel.inJobID := JOBID_TA;
+  aModel.inDomen := TA_DOMEN;
+end;
+
+procedure TController.StartTAParser;
+begin
+  CallModel<TModelTAParser>;
+end;
 
 function TController.CreateSQLiteEngine: TSQLiteEngine;
 var

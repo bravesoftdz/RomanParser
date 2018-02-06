@@ -23,7 +23,12 @@ uses
   eExtRecord in 'eExtRecord.pas',
   API_Yandex in '..\..\Libs\Delphi\API_Yandex.pas',
   API_HTTP in '..\..\Libs\Delphi\API_HTTP.pas',
-  API_Strings in '..\..\Libs\Delphi\API_Strings.pas';
+  API_Strings in '..\..\Libs\Delphi\API_Strings.pas',
+  mTAParser in 'mTAParser.pas',
+  eLink in 'eLink.pas',
+  eJob in 'eJob.pas',
+  eGroup in 'eGroup.pas',
+  eRecord in 'eRecord.pas';
 
 {$R *.res}
 

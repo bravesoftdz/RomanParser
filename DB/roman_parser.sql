@@ -1,5 +1,5 @@
 ﻿# Host: 127.0.0.1  (Version 5.7.18-log)
-# Date: 2018-02-05 18:26:20
+# Date: 2018-02-06 18:30:59
 # Generator: MySQL-Front 6.0  (Build 2.20)
 
 
@@ -15,10 +15,87 @@ CREATE TABLE `converted_links` (
   `error_msg` text,
   PRIMARY KEY (`Id`),
   KEY `ext_link_id` (`ext_link_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=124 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=167 DEFAULT CHARSET=utf8;
 
 #
 # Data for table "converted_links"
+#
+
+
+#
+# Structure for table "jobs"
+#
+
+DROP TABLE IF EXISTS `jobs`;
+CREATE TABLE `jobs` (
+  `Id` int(11) NOT NULL AUTO_INCREMENT,
+  `caption` varchar(255) NOT NULL DEFAULT '',
+  `zero_link` text NOT NULL,
+  PRIMARY KEY (`Id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+
+#
+# Data for table "jobs"
+#
+
+INSERT INTO `jobs` VALUES (1,'TripAdvisor.com','https://www.tripadvisor.ru/SiteIndex');
+
+#
+# Structure for table "link_handled_types"
+#
+
+DROP TABLE IF EXISTS `link_handled_types`;
+CREATE TABLE `link_handled_types` (
+  `Id` int(11) NOT NULL AUTO_INCREMENT,
+  `handled_type` varchar(100) NOT NULL DEFAULT '',
+  PRIMARY KEY (`Id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
+
+#
+# Data for table "link_handled_types"
+#
+
+INSERT INTO `link_handled_types` VALUES (1,'new link'),(2,'in handling'),(3,'success handled'),(4,'error handled');
+
+#
+# Structure for table "links"
+#
+
+DROP TABLE IF EXISTS `links`;
+CREATE TABLE `links` (
+  `Id` int(11) NOT NULL AUTO_INCREMENT,
+  `job_id` int(11) NOT NULL DEFAULT '0',
+  `level` int(11) DEFAULT NULL,
+  `link` text NOT NULL,
+  `handled_type_id` int(11) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`Id`),
+  KEY `handle_type_id` (`handled_type_id`),
+  KEY `job_id` (`job_id`,`handled_type_id`),
+  KEY `level` (`level`),
+  CONSTRAINT `links_ibfk_1` FOREIGN KEY (`job_id`) REFERENCES `jobs` (`Id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `links_ibfk_2` FOREIGN KEY (`handled_type_id`) REFERENCES `link_handled_types` (`Id`)
+) ENGINE=InnoDB AUTO_INCREMENT=471 DEFAULT CHARSET=utf8;
+
+#
+# Data for table "links"
+#
+
+
+#
+# Structure for table "groups"
+#
+
+DROP TABLE IF EXISTS `groups`;
+CREATE TABLE `groups` (
+  `Id` int(11) NOT NULL AUTO_INCREMENT,
+  `link_id` int(11) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`Id`),
+  KEY `link_id` (`link_id`),
+  CONSTRAINT `groups_ibfk_1` FOREIGN KEY (`link_id`) REFERENCES `links` (`Id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=511 DEFAULT CHARSET=utf8;
+
+#
+# Data for table "groups"
 #
 
 
@@ -57,9 +134,29 @@ CREATE TABLE `output` (
   `en_source` text NOT NULL,
   `ua_source` text NOT NULL,
   PRIMARY KEY (`Id`)
-) ENGINE=InnoDB AUTO_INCREMENT=173 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=157 DEFAULT CHARSET=utf8;
 
 #
 # Data for table "output"
+#
+
+
+#
+# Structure for table "records"
+#
+
+DROP TABLE IF EXISTS `records`;
+CREATE TABLE `records` (
+  `Id` int(11) NOT NULL AUTO_INCREMENT,
+  `group_id` int(11) NOT NULL DEFAULT '0',
+  `key` varchar(255) NOT NULL DEFAULT '',
+  `value` longtext NOT NULL,
+  PRIMARY KEY (`Id`),
+  KEY `group_id` (`group_id`),
+  CONSTRAINT `records_ibfk_1` FOREIGN KEY (`group_id`) REFERENCES `groups` (`Id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=494 DEFAULT CHARSET=utf8;
+
+#
+# Data for table "records"
 #
 

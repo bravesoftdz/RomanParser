@@ -6,12 +6,14 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   API_MVC,
-  API_MVC_VCL, Vcl.StdCtrls;
+  API_MVC_VCL, Vcl.StdCtrls, FireDAC.Moni.Base, FireDAC.Moni.RemoteClient;
 
 type
   TViewMain = class(TViewVCLBase)
     btnWikiConvert: TButton;
+    btnTAParse: TButton;
     procedure btnWikiConvertClick(Sender: TObject);
+    procedure btnTAParseClick(Sender: TObject);
   private
     { Private declarations }
     procedure InitMVC(var aControllerClass: TControllerClass); override;
@@ -28,6 +30,13 @@ implementation
 
 uses
   cController;
+
+procedure TViewMain.btnTAParseClick(Sender: TObject);
+begin
+  inherited;
+
+  SendMessage('StartTAParser');
+end;
 
 procedure TViewMain.btnWikiConvertClick(Sender: TObject);
 begin

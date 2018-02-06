@@ -11,4 +11,13 @@ inherited ViewMain: TViewMain
     TabOrder = 0
     OnClick = btnWikiConvertClick
   end
+  object btnTAParse: TButton
+    Left = 16
+    Top = 56
+    Width = 113
+    Height = 25
+    Caption = 'btnTAParser'
+    TabOrder = 1
+    OnClick = btnTAParseClick
+  end
 end

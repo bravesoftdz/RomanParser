@@ -12,8 +12,10 @@ type
   TViewMain = class(TViewVCLBase)
     btnWikiConvert: TButton;
     btnTAParse: TButton;
+    btnParserTest: TButton;
     procedure btnWikiConvertClick(Sender: TObject);
     procedure btnTAParseClick(Sender: TObject);
+    procedure btnParserTestClick(Sender: TObject);
   private
     { Private declarations }
     procedure InitMVC(var aControllerClass: TControllerClass); override;
@@ -30,6 +32,13 @@ implementation
 
 uses
   cController;
+
+procedure TViewMain.btnParserTestClick(Sender: TObject);
+begin
+  inherited;
+
+  SendMessage('StartTestParser');
+end;
 
 procedure TViewMain.btnTAParseClick(Sender: TObject);
 begin

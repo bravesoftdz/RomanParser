@@ -8,6 +8,7 @@ uses
   API_DB_SQLite,
   API_MVC_VCLDB,
   mTAParser,
+  mTestParser,
   mWikiConvert;
 
 type
@@ -20,6 +21,7 @@ type
     procedure OnModelTAParserInit(aModel: TModelTAParser);
     procedure OnModelWikiConvertInit(aModel: TModelWikiConvert);
     procedure StartTAParser;
+    procedure StartTestParser;
     procedure StartWikiConvert;
   end;
 
@@ -28,6 +30,11 @@ const
   TA_DOMEN = 'https://www.tripadvisor.ru';
 
 implementation
+
+procedure TController.StartTestParser;
+begin
+  CallModel<TModelTestParser>(10);
+end;
 
 procedure TController.OnModelTAParserInit(aModel: TModelTAParser);
 begin

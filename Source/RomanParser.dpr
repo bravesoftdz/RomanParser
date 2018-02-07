@@ -15,7 +15,7 @@ uses
   API_DB_SQLite in '..\..\Libs\Delphi\API_DB_SQLite.pas',
   mWikiConvert in 'mWikiConvert.pas',
   eConvertedLinks in 'eConvertedLinks.pas',
-  eCommon in 'eCommon.pas',
+  eCommon in '..\..\Libs\DelphiTemplates\Parser\eCommon.pas',
   eExtLink in 'eExtLink.pas',
   eExtJob in 'eExtJob.pas',
   eOutput in 'eOutput.pas',
@@ -25,10 +25,12 @@ uses
   API_HTTP in '..\..\Libs\Delphi\API_HTTP.pas',
   API_Strings in '..\..\Libs\Delphi\API_Strings.pas',
   mTAParser in 'mTAParser.pas',
-  eLink in 'eLink.pas',
-  eJob in 'eJob.pas',
-  eGroup in 'eGroup.pas',
-  eRecord in 'eRecord.pas';
+  eLink in '..\..\Libs\DelphiTemplates\Parser\eLink.pas',
+  eJob in '..\..\Libs\DelphiTemplates\Parser\eJob.pas',
+  eGroup in '..\..\Libs\DelphiTemplates\Parser\eGroup.pas',
+  eRecord in '..\..\Libs\DelphiTemplates\Parser\eRecord.pas',
+  mParserBase in '..\..\Libs\DelphiTemplates\Parser\mParserBase.pas',
+  mTestParser in 'mTestParser.pas';
 
 {$R *.res}
 

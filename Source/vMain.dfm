@@ -20,4 +20,13 @@ inherited ViewMain: TViewMain
     TabOrder = 1
     OnClick = btnTAParseClick
   end
+  object btnParserTest: TButton
+    Left = 168
+    Top = 16
+    Width = 113
+    Height = 25
+    Caption = 'btnParserTest'
+    TabOrder = 2
+    OnClick = btnParserTestClick
+  end
 end

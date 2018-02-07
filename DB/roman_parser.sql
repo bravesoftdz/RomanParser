@@ -1,5 +1,5 @@
 ﻿# Host: 127.0.0.1  (Version 5.7.18-log)
-# Date: 2018-02-06 18:30:59
+# Date: 2018-02-07 18:17:35
 # Generator: MySQL-Front 6.0  (Build 2.20)
 
 
@@ -15,7 +15,7 @@ CREATE TABLE `converted_links` (
   `error_msg` text,
   PRIMARY KEY (`Id`),
   KEY `ext_link_id` (`ext_link_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=167 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 #
 # Data for table "converted_links"
@@ -74,7 +74,7 @@ CREATE TABLE `links` (
   KEY `level` (`level`),
   CONSTRAINT `links_ibfk_1` FOREIGN KEY (`job_id`) REFERENCES `jobs` (`Id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `links_ibfk_2` FOREIGN KEY (`handled_type_id`) REFERENCES `link_handled_types` (`Id`)
-) ENGINE=InnoDB AUTO_INCREMENT=471 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 #
 # Data for table "links"
@@ -89,10 +89,13 @@ DROP TABLE IF EXISTS `groups`;
 CREATE TABLE `groups` (
   `Id` int(11) NOT NULL AUTO_INCREMENT,
   `link_id` int(11) NOT NULL DEFAULT '0',
+  `parent_group_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`Id`),
   KEY `link_id` (`link_id`),
-  CONSTRAINT `groups_ibfk_1` FOREIGN KEY (`link_id`) REFERENCES `links` (`Id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=511 DEFAULT CHARSET=utf8;
+  KEY `parent_group_id` (`parent_group_id`),
+  CONSTRAINT `groups_ibfk_1` FOREIGN KEY (`link_id`) REFERENCES `links` (`Id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `groups_ibfk_2` FOREIGN KEY (`parent_group_id`) REFERENCES `groups` (`Id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=233 DEFAULT CHARSET=utf8;
 
 #
 # Data for table "groups"
@@ -134,7 +137,7 @@ CREATE TABLE `output` (
   `en_source` text NOT NULL,
   `ua_source` text NOT NULL,
   PRIMARY KEY (`Id`)
-) ENGINE=InnoDB AUTO_INCREMENT=157 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 #
 # Data for table "output"
@@ -154,7 +157,7 @@ CREATE TABLE `records` (
   PRIMARY KEY (`Id`),
   KEY `group_id` (`group_id`),
   CONSTRAINT `records_ibfk_1` FOREIGN KEY (`group_id`) REFERENCES `groups` (`Id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=494 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 #
 # Data for table "records"

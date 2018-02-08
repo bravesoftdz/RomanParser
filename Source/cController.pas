@@ -27,7 +27,7 @@ type
 
 const
   JOBID_TA = 1;
-  TA_DOMEN = 'https://www.tripadvisor.ru';
+  TA_DOMAIN = 'https://www.tripadvisor.ru';
 
 implementation
 
@@ -39,7 +39,7 @@ end;
 procedure TController.OnModelTAParserInit(aModel: TModelTAParser);
 begin
   aModel.inJobID := JOBID_TA;
-  aModel.inDomen := TA_DOMEN;
+  aModel.inDomain := TA_DOMAIN;
 end;
 
 procedure TController.StartTAParser;

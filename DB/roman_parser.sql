@@ -1,5 +1,5 @@
 ﻿# Host: 127.0.0.1  (Version 5.7.18-log)
-# Date: 2018-02-07 18:17:35
+# Date: 2018-02-08 18:07:39
 # Generator: MySQL-Front 6.0  (Build 2.20)
 
 
@@ -19,6 +19,25 @@ CREATE TABLE `converted_links` (
 
 #
 # Data for table "converted_links"
+#
+
+
+#
+# Structure for table "groups"
+#
+
+DROP TABLE IF EXISTS `groups`;
+CREATE TABLE `groups` (
+  `Id` int(11) NOT NULL AUTO_INCREMENT,
+  `parent_group_id` int(11) DEFAULT NULL,
+  `root_chain` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`Id`),
+  KEY `parent_group_id` (`parent_group_id`),
+  CONSTRAINT `groups_ibfk_2` FOREIGN KEY (`parent_group_id`) REFERENCES `groups` (`Id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=934 DEFAULT CHARSET=utf8;
+
+#
+# Data for table "groups"
 #
 
 
@@ -65,40 +84,26 @@ DROP TABLE IF EXISTS `links`;
 CREATE TABLE `links` (
   `Id` int(11) NOT NULL AUTO_INCREMENT,
   `job_id` int(11) NOT NULL DEFAULT '0',
-  `level` int(11) DEFAULT NULL,
+  `level` int(11) DEFAULT '0',
+  `owner_group_id` int(11) DEFAULT NULL,
+  `body_group_id` int(11) DEFAULT NULL,
   `link` text NOT NULL,
   `handled_type_id` int(11) NOT NULL DEFAULT '1',
+  `post_data` text,
+  `headers` text,
   PRIMARY KEY (`Id`),
   KEY `handle_type_id` (`handled_type_id`),
-  KEY `job_id` (`job_id`,`handled_type_id`),
-  KEY `level` (`level`),
+  KEY `body_group_id` (`body_group_id`),
+  KEY `owner_group_id` (`owner_group_id`),
+  KEY `job_id` (`job_id`,`handled_type_id`,`level`),
   CONSTRAINT `links_ibfk_1` FOREIGN KEY (`job_id`) REFERENCES `jobs` (`Id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `links_ibfk_2` FOREIGN KEY (`handled_type_id`) REFERENCES `link_handled_types` (`Id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  CONSTRAINT `links_ibfk_2` FOREIGN KEY (`handled_type_id`) REFERENCES `link_handled_types` (`Id`),
+  CONSTRAINT `links_ibfk_3` FOREIGN KEY (`owner_group_id`) REFERENCES `groups` (`Id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `links_ibfk_4` FOREIGN KEY (`body_group_id`) REFERENCES `groups` (`Id`) ON DELETE SET NULL ON UPDATE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=2020 DEFAULT CHARSET=utf8;
 
 #
 # Data for table "links"
-#
-
-
-#
-# Structure for table "groups"
-#
-
-DROP TABLE IF EXISTS `groups`;
-CREATE TABLE `groups` (
-  `Id` int(11) NOT NULL AUTO_INCREMENT,
-  `link_id` int(11) NOT NULL DEFAULT '0',
-  `parent_group_id` int(11) DEFAULT NULL,
-  PRIMARY KEY (`Id`),
-  KEY `link_id` (`link_id`),
-  KEY `parent_group_id` (`parent_group_id`),
-  CONSTRAINT `groups_ibfk_1` FOREIGN KEY (`link_id`) REFERENCES `links` (`Id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `groups_ibfk_2` FOREIGN KEY (`parent_group_id`) REFERENCES `groups` (`Id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=233 DEFAULT CHARSET=utf8;
-
-#
-# Data for table "groups"
 #
 
 
@@ -151,15 +156,29 @@ CREATE TABLE `output` (
 DROP TABLE IF EXISTS `records`;
 CREATE TABLE `records` (
   `Id` int(11) NOT NULL AUTO_INCREMENT,
-  `group_id` int(11) NOT NULL DEFAULT '0',
+  `owner_group_id` int(11) NOT NULL DEFAULT '0',
   `key` varchar(255) NOT NULL DEFAULT '',
   `value` longtext NOT NULL,
   PRIMARY KEY (`Id`),
-  KEY `group_id` (`group_id`),
-  CONSTRAINT `records_ibfk_1` FOREIGN KEY (`group_id`) REFERENCES `groups` (`Id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  KEY `group_id` (`owner_group_id`),
+  CONSTRAINT `records_ibfk_1` FOREIGN KEY (`owner_group_id`) REFERENCES `groups` (`Id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=929 DEFAULT CHARSET=utf8;
 
 #
 # Data for table "records"
 #
 
+
+#
+# Trigger "delete_body_group"
+#
+
+DROP TRIGGER IF EXISTS `delete_body_group`;
+roman_parser
+
+#
+# Trigger "write_root_chain"
+#
+
+DROP TRIGGER IF EXISTS `write_root_chain`;
+roman_parser

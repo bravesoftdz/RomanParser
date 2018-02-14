@@ -1,5 +1,5 @@
 ﻿# Host: 127.0.0.1  (Version 5.7.18-log)
-# Date: 2018-02-08 18:07:39
+# Date: 2018-02-14 18:14:05
 # Generator: MySQL-Front 6.0  (Build 2.20)
 
 
@@ -34,7 +34,7 @@ CREATE TABLE `groups` (
   PRIMARY KEY (`Id`),
   KEY `parent_group_id` (`parent_group_id`),
   CONSTRAINT `groups_ibfk_2` FOREIGN KEY (`parent_group_id`) REFERENCES `groups` (`Id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=934 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=272 DEFAULT CHARSET=utf8;
 
 #
 # Data for table "groups"
@@ -100,7 +100,7 @@ CREATE TABLE `links` (
   CONSTRAINT `links_ibfk_2` FOREIGN KEY (`handled_type_id`) REFERENCES `link_handled_types` (`Id`),
   CONSTRAINT `links_ibfk_3` FOREIGN KEY (`owner_group_id`) REFERENCES `groups` (`Id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `links_ibfk_4` FOREIGN KEY (`body_group_id`) REFERENCES `groups` (`Id`) ON DELETE SET NULL ON UPDATE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=2020 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=237 DEFAULT CHARSET=utf8;
 
 #
 # Data for table "links"
@@ -162,7 +162,7 @@ CREATE TABLE `records` (
   PRIMARY KEY (`Id`),
   KEY `group_id` (`owner_group_id`),
   CONSTRAINT `records_ibfk_1` FOREIGN KEY (`owner_group_id`) REFERENCES `groups` (`Id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=929 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=236 DEFAULT CHARSET=utf8;
 
 #
 # Data for table "records"

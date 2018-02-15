@@ -5,31 +5,81 @@ interface
 uses
   eGroup,
   eLink,
+  IdCookieManager,
   mParserBase;
 
 type
   TModelTAParser = class(TModelParser)
   private
+    FCookie: string;
     procedure L0ProcessPageCountries(const aPage: string; var aBodyGroup: TGroup);
     procedure L1ProcessPageCategories(const aPage: string; var aBodyGroup: TGroup);
     procedure L2ProcessPageRegion(const aPage: string; aLink: TLink; var aBodyGroup: TGroup);
     procedure L3ProcessPageRegions(const aPage: string; var aBodyGroup: TGroup);
     procedure L4ProcessPageObject(const aPage: string; aLink: TLink; var aBodyGroup: TGroup);
+    procedure L5ProcessPageEmail(const aPage: string; var aBodyGroup: TGroup);
+    procedure L6ProcessPageSite(var aBodyGroup: TGroup);
   protected
+    procedure AfterCreate; override;
+    procedure BeforePageLoad(aIdCookieManager: TIdCookieManager; aLink: TLink); override;
     procedure ProcessPageRoute(const aPage: string; aLink: TLink; var aBodyGroup: TGroup); override;
   end;
 
 implementation
 
 uses
+  API_Files,
   API_Strings,
+  IdCookie,
+  IdURI,
   System.Classes,
   System.SysUtils;
+
+procedure TModelTAParser.AfterCreate;
+begin
+  FCookie := TFilesEngine.GetTextFromFile('Settings\Cookie.txt');
+
+  inherited;
+end;
+
+procedure TModelTAParser.BeforePageLoad(aIdCookieManager: TIdCookieManager; aLink: TLink);
+var
+  IdCookie: TIdCookie;
+  IdURI: TIdURI;
+begin
+  IdURI := TIdURI.Create(aLink.Link);
+  try
+    IdCookie := TIdCookie.Create(nil);
+    IdCookie.ParseServerCookie(FCookie, IdURI);
+
+    aIdCookieManager.CookieCollection.AddCookie(IdCookie, IdURI);
+  finally
+    IdURI.Free;
+  end;
+end;
+
+procedure TModelTAParser.L6ProcessPageSite(var aBodyGroup: TGroup);
+begin
+  aBodyGroup.AddRecord('site_url', FHTTP.URL);
+end;
+
+procedure TModelTAParser.L5ProcessPageEmail(const aPage: string; var aBodyGroup: TGroup);
+var
+  Email: string;
+begin
+  Email := TStrTool.CutByKey(aPage, 'class="ui_input_text disabled', '>');
+  Email := TStrTool.CutByKey(Email, 'value="', '"');
+  aBodyGroup.AddRecord('email', Email);
+end;
 
 procedure TModelTAParser.L4ProcessPageObject(const aPage: string; aLink: TLink; var aBodyGroup: TGroup);
 var
   Address: string;
   City: string;
+  Content: string;
+  EmailURL: string;
+  Phone: string;
+  SiteURL: string;
   Title: string;
   TitleAlt: string;
   TitleBlock: string;
@@ -39,7 +89,8 @@ begin
   TitleAlt := TStrTool.CutByKey(TitleBlock, 'is-hidden-mobile">', '<').Trim;
 
   aBodyGroup.AddRecord('title', Title);
-  aBodyGroup.AddRecord('title_alt', TitleAlt);
+  if not TitleAlt.IsEmpty then
+    aBodyGroup.AddRecord('title_alt', TitleAlt);
 
   City := TStrTool.CutByKey(aPage, 'class="ui_pill', '<');
   City := TStrTool.CutByKey(City, '>', '');
@@ -48,6 +99,35 @@ begin
   Address := TStrTool.CutByKey(aPage, 'class="street-address">', '<div');
   Address := TStrTool.RemoveHTMLTags(Address);
   aBodyGroup.AddRecord('address', Address);
+
+  if aPage.Contains('"ui_icon email"') then
+    begin
+      EmailURL := 'https://www.tripadvisor.ru/EmailHotel?detail=%s&guests=2&isOfferEmail=false&rooms=1';
+      EmailURL := Format(EmailURL, [TStrTool.CutByKey(aLink.Link, '-d', '-')]);
+      aBodyGroup.AddLink(inJobID, 5, EmailURL);
+    end;
+
+  Phone := TStrTool.CutByKey(aPage, 'class="ui_icon phone"', '</div>');
+  Phone := TStrTool.CutByKey(Phone, '">', '<');
+  if not Phone.IsEmpty then
+    aBodyGroup.AddRecord('phone', Phone);
+
+  if aPage.Contains('class= "ui_icon laptop"') then
+    begin
+      SiteURL := 'https://www.tripadvisor.ru/ShowUrl?&excludeFromVS=false&odc=BusinessListingsUrl&d=%s&url=1';
+      SiteURL := Format(SiteURL, [TStrTool.CutByKey(aLink.Link, '-d', '-')]);
+      aBodyGroup.AddLink(inJobID, 6, SiteURL);
+    end;
+
+  Content := TStrTool.CutByKey(aPage, '">Услуги</div>', '<div class="is-hidden-desktop');
+  Content := Content.Replace('<div', #10#13'<div');
+  Content := Content.Replace('<DIV', #10#13'<div');
+  Content := TStrTool.RemoveHTMLTags(Content).Trim;
+
+  Content := TStrTool.CutByKey(aPage, '">Подробнее </div>', '</DIV></div>');
+  Content := Content.Replace('<div', #10#13'<div');
+  Content := Content.Replace('<DIV', #10#13'<div');
+  Content := TStrTool.RemoveHTMLTags(Content).Trim;
 end;
 
 procedure TModelTAParser.L3ProcessPageRegions(const aPage: string; var aBodyGroup: TGroup);
@@ -154,6 +234,8 @@ begin
     2: L2ProcessPageRegion(aPage, aLink, aBodyGroup);
     3: L3ProcessPageRegions(aPage, aBodyGroup);
     4: L4ProcessPageObject(aPage, aLink, aBodyGroup);
+    5: L5ProcessPageEmail(aPage, aBodyGroup);
+    6: L6ProcessPageSite(aBodyGroup);
   end;
 end;
 

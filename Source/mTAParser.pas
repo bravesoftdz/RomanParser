@@ -12,6 +12,7 @@ type
   TModelTAParser = class(TModelParser)
   private
     FCookie: string;
+    procedure AddContent(var aContent: string; aContentBlock: string);
     procedure L0ProcessPageCountries(const aPage: string; var aBodyGroup: TGroup);
     procedure L1ProcessPageCategories(const aPage: string; var aBodyGroup: TGroup);
     procedure L2ProcessPageRegion(const aPage: string; aLink: TLink; var aBodyGroup: TGroup);
@@ -19,6 +20,7 @@ type
     procedure L4ProcessPageObject(const aPage: string; aLink: TLink; var aBodyGroup: TGroup);
     procedure L5ProcessPageEmail(const aPage: string; var aBodyGroup: TGroup);
     procedure L6ProcessPageSite(var aBodyGroup: TGroup);
+    procedure L7ProcessPageAbout(const aPage: string; var aBodyGroup: TGroup);
   protected
     procedure AfterCreate; override;
     procedure BeforePageLoad(aIdCookieManager: TIdCookieManager; aLink: TLink); override;
@@ -34,6 +36,44 @@ uses
   IdURI,
   System.Classes,
   System.SysUtils;
+
+procedure TModelTAParser.AddContent(var aContent: string; aContentBlock: string);
+begin
+  aContentBlock := aContentBlock.Replace('<div', #13#10'<div');
+  aContentBlock := aContentBlock.Replace('<DIV', #13#10'<div');
+  aContentBlock := TStrTool.RemoveHTMLTags(aContentBlock);
+  aContentBlock := aContentBlock.Replace(#13#10#13#10, #13#10, [rfReplaceAll, rfIgnoreCase]);
+
+  if not aContent.isEmpty then
+    aContent := aContent + #13#10#13#10;
+
+  aContent := aContent + aContentBlock.Trim;
+end;
+
+procedure TModelTAParser.L7ProcessPageAbout(const aPage: string; var aBodyGroup: TGroup);
+var
+  Content: string;
+  ContentBlock: string;
+  ContentBlockArr: TArray<string>;
+begin
+  ContentBlock := TStrTool.CutByKey(aPage, '">Услуги</div>', '<div class="is-hidden-desktop');
+  ContentBlockArr := TStrTool.CutArrayByKey(ContentBlock, 'class="sub_title">', '</DIV></div></div>');
+  for ContentBlock in ContentBlockArr do
+    AddContent(Content, ContentBlock);
+
+  ContentBlock := TStrTool.CutByKey(aPage, '">Подробнее </div>', '</DIV></div>');
+  AddContent(Content, ContentBlock);
+
+  ContentBlock := TStrTool.CutByKey(aPage, '">Типы номеров', '</DIV></div>');
+  if not ContentBlock.IsEmpty then
+    AddContent(Content, 'Типы номеров'#10#13 + ContentBlock);
+
+  ContentBlock := TStrTool.CutByKey(aPage, '">Количество номеров', '</DIV></div>');
+  if not ContentBlock.IsEmpty then
+    AddContent(Content, 'Количество номеров'#10#13 + ContentBlock);
+
+  aBodyGroup.AddRecord('ru_content', Content);
+end;
 
 procedure TModelTAParser.AfterCreate;
 begin
@@ -76,13 +116,15 @@ procedure TModelTAParser.L4ProcessPageObject(const aPage: string; aLink: TLink; 
 var
   Address: string;
   City: string;
-  Content: string;
+  Headers: string;
   EmailURL: string;
   Phone: string;
+  PostData: string;
   SiteURL: string;
   Title: string;
   TitleAlt: string;
   TitleBlock: string;
+  XPuid: string;
 begin
   TitleBlock := TStrTool.CutByKey(aPage, '<h1 id="HEADING"', '</h1>');
   Title := TStrTool.CutByKey(TitleBlock, '>', '<').Trim;
@@ -119,15 +161,25 @@ begin
       aBodyGroup.AddLink(inJobID, 6, SiteURL);
     end;
 
-  Content := TStrTool.CutByKey(aPage, '">Услуги</div>', '<div class="is-hidden-desktop');
-  Content := Content.Replace('<div', #10#13'<div');
-  Content := Content.Replace('<DIV', #10#13'<div');
-  Content := TStrTool.RemoveHTMLTags(Content).Trim;
+  if aPage.Contains('m+="&needContent') then
+    begin
+      AddPostOrHeaderData(PostData, 'haveJses', 'earlyRequireDefine,amdearly,global_error,long_lived_global,apg-Hotel_Review,apg-Hotel_Review-in,bootstrap,desktop-rooms-guests-dust-ru,responsive-calendar-templates-dust-ru,taevents');
+      AddPostOrHeaderData(PostData, 'haveCsses', 'apg-Hotel_Review-in,responsive_calendars_classic');
+      AddPostOrHeaderData(PostData, 'needJses', '');
+      AddPostOrHeaderData(PostData, 'needCsses', '');
+      AddPostOrHeaderData(PostData, 'needDusts', '');
+      AddPostOrHeaderData(PostData, 'needContent', '$prp/resp_hr_about/placement?occur=0');
+      AddPostOrHeaderData(PostData, 'metaReferer', 'Hotel_Review');
 
-  Content := TStrTool.CutByKey(aPage, '">Подробнее </div>', '</DIV></div>');
-  Content := Content.Replace('<div', #10#13'<div');
-  Content := Content.Replace('<DIV', #10#13'<div');
-  Content := TStrTool.RemoveHTMLTags(Content).Trim;
+      AddPostOrHeaderData(Headers, 'origin', 'https://www.tripadvisor.ru');
+      AddPostOrHeaderData(Headers, 'referer', aLink.Link);
+
+      XPuid := TStrTool.CutByKey(aPage, 'uid":"', '"');
+      AddPostOrHeaderData(Headers, 'x-puid', XPuid);
+      AddPostOrHeaderData(Headers, 'x-requested-with', 'XMLHttpRequest');
+
+      aBodyGroup.AddLink(inJobID, 7, 'https://www.tripadvisor.ru/DemandLoadAjax', PostData, Headers);
+    end;
 end;
 
 procedure TModelTAParser.L3ProcessPageRegions(const aPage: string; var aBodyGroup: TGroup);
@@ -236,6 +288,7 @@ begin
     4: L4ProcessPageObject(aPage, aLink, aBodyGroup);
     5: L5ProcessPageEmail(aPage, aBodyGroup);
     6: L6ProcessPageSite(aBodyGroup);
+    7: L7ProcessPageAbout(aPage, aBodyGroup);
   end;
 end;
 

@@ -6,10 +6,10 @@ uses
   eGroup,
   eLink,
   IdCookieManager,
-  mParserBase;
+  mParserOnRequests;
 
 type
-  TModelTAParser = class(TModelParser)
+  TModelTAParser = class(TModelParserOnRequests)
   private
     FCookie: string;
     procedure AddContent(var aContent: string; aContentBlock: string);
@@ -17,14 +17,16 @@ type
     procedure L1ProcessPageCategories(const aPage: string; var aBodyGroup: TGroup);
     procedure L2ProcessPageRegion(const aPage: string; aLink: TLink; var aBodyGroup: TGroup);
     procedure L3ProcessPageRegions(const aPage: string; var aBodyGroup: TGroup);
-    procedure L4ProcessPageObject(const aPage: string; aLink: TLink; var aBodyGroup: TGroup);
-    procedure L5ProcessPageEmail(const aPage: string; var aBodyGroup: TGroup);
-    procedure L6ProcessPageSite(var aBodyGroup: TGroup);
-    procedure L7ProcessPageAbout(const aPage: string; var aBodyGroup: TGroup);
+    procedure L4ProcessPageObjectRU(const aPage: string; aLink: TLink; var aBodyGroup: TGroup);
+    procedure L6ProcessPageEmail(const aPage: string; var aBodyGroup: TGroup);
+    procedure L7ProcessPageSite(var aBodyGroup: TGroup);
+    procedure L8ProcessPageAboutRU(const aPage: string; var aBodyGroup: TGroup);
+    procedure L5ProcessPageObjectEN(const aPage: string; aLink: TLink; var aBodyGroup: TGroup);
+    procedure L9ProcessPageAboutEN(const aPage: string; var aBodyGroup: TGroup);
   protected
     procedure AfterCreate; override;
-    procedure BeforePageLoad(aIdCookieManager: TIdCookieManager; aLink: TLink); override;
-    procedure ProcessPageRoute(const aPage: string; aLink: TLink; var aBodyGroup: TGroup); override;
+    //procedure BeforePageLoad(aIdCookieManager: TIdCookieManager; aLink: TLink); override;
+    //procedure ProcessPageRoute(const aPage: string; aLink: TLink; var aBodyGroup: TGroup); override;
   end;
 
 implementation
@@ -36,6 +38,16 @@ uses
   IdURI,
   System.Classes,
   System.SysUtils;
+
+procedure TModelTAParser.L9ProcessPageAboutEN(const aPage: string; var aBodyGroup: TGroup);
+begin
+
+end;
+
+procedure TModelTAParser.L5ProcessPageObjectEN(const aPage: string; aLink: TLink; var aBodyGroup: TGroup);
+begin
+
+end;
 
 procedure TModelTAParser.AddContent(var aContent: string; aContentBlock: string);
 begin
@@ -50,7 +62,7 @@ begin
   aContent := aContent + aContentBlock.Trim;
 end;
 
-procedure TModelTAParser.L7ProcessPageAbout(const aPage: string; var aBodyGroup: TGroup);
+procedure TModelTAParser.L8ProcessPageAboutRU(const aPage: string; var aBodyGroup: TGroup);
 var
   Content: string;
   ContentBlock: string;
@@ -82,12 +94,12 @@ begin
   inherited;
 end;
 
-procedure TModelTAParser.BeforePageLoad(aIdCookieManager: TIdCookieManager; aLink: TLink);
+{procedure TModelTAParser.BeforePageLoad(aIdCookieManager: TIdCookieManager; aLink: TLink);
 var
   IdCookie: TIdCookie;
   IdURI: TIdURI;
 begin
-  IdURI := TIdURI.Create(aLink.Link);
+  IdURI := TIdURI.Create(aLink.URL);
   try
     IdCookie := TIdCookie.Create(nil);
     IdCookie.ParseServerCookie(FCookie, IdURI);
@@ -96,14 +108,14 @@ begin
   finally
     IdURI.Free;
   end;
-end;
+end; }
 
-procedure TModelTAParser.L6ProcessPageSite(var aBodyGroup: TGroup);
+procedure TModelTAParser.L7ProcessPageSite(var aBodyGroup: TGroup);
 begin
-  aBodyGroup.AddRecord('site_url', FHTTP.URL);
+  //aBodyGroup.AddRecord('site_url', FHTTP.URL);
 end;
 
-procedure TModelTAParser.L5ProcessPageEmail(const aPage: string; var aBodyGroup: TGroup);
+procedure TModelTAParser.L6ProcessPageEmail(const aPage: string; var aBodyGroup: TGroup);
 var
   Email: string;
 begin
@@ -112,12 +124,14 @@ begin
   aBodyGroup.AddRecord('email', Email);
 end;
 
-procedure TModelTAParser.L4ProcessPageObject(const aPage: string; aLink: TLink; var aBodyGroup: TGroup);
+procedure TModelTAParser.L4ProcessPageObjectRU(const aPage: string; aLink: TLink; var aBodyGroup: TGroup);
 var
   Address: string;
   City: string;
+  Country: string;
   Headers: string;
   EmailURL: string;
+  EnLink: string;
   Phone: string;
   PostData: string;
   SiteURL: string;
@@ -138,6 +152,9 @@ begin
   City := TStrTool.CutByKey(City, '>', '');
   aBodyGroup.AddRecord('city', City);
 
+  Country := TStrTool.CutByKey(aPage, 'class="country-name">', '<');
+  aBodyGroup.AddRecord('ru_country', Country);
+
   Address := TStrTool.CutByKey(aPage, 'class="street-address">', '<div');
   Address := TStrTool.RemoveHTMLTags(Address);
   aBodyGroup.AddRecord('address', Address);
@@ -145,8 +162,8 @@ begin
   if aPage.Contains('"ui_icon email"') then
     begin
       EmailURL := 'https://www.tripadvisor.ru/EmailHotel?detail=%s&guests=2&isOfferEmail=false&rooms=1';
-      EmailURL := Format(EmailURL, [TStrTool.CutByKey(aLink.Link, '-d', '-')]);
-      aBodyGroup.AddLink(inJobID, 5, EmailURL);
+      EmailURL := Format(EmailURL, [TStrTool.CutByKey(aLink.URL, '-d', '-')]);
+      //aBodyGroup.AddLink(inJobID, 6, EmailURL);
     end;
 
   Phone := TStrTool.CutByKey(aPage, 'class="ui_icon phone"', '</div>');
@@ -157,11 +174,11 @@ begin
   if aPage.Contains('class= "ui_icon laptop"') then
     begin
       SiteURL := 'https://www.tripadvisor.ru/ShowUrl?&excludeFromVS=false&odc=BusinessListingsUrl&d=%s&url=1';
-      SiteURL := Format(SiteURL, [TStrTool.CutByKey(aLink.Link, '-d', '-')]);
-      aBodyGroup.AddLink(inJobID, 6, SiteURL);
+      SiteURL := Format(SiteURL, [TStrTool.CutByKey(aLink.URL, '-d', '-')]);
+      //aBodyGroup.AddLink(inJobID, 7, SiteURL);
     end;
 
-  if aPage.Contains('m+="&needContent') then
+  {if aPage.Contains('m+="&needContent') then
     begin
       AddPostOrHeaderData(PostData, 'haveJses', 'earlyRequireDefine,amdearly,global_error,long_lived_global,apg-Hotel_Review,apg-Hotel_Review-in,bootstrap,desktop-rooms-guests-dust-ru,responsive-calendar-templates-dust-ru,taevents');
       AddPostOrHeaderData(PostData, 'haveCsses', 'apg-Hotel_Review-in,responsive_calendars_classic');
@@ -172,14 +189,17 @@ begin
       AddPostOrHeaderData(PostData, 'metaReferer', 'Hotel_Review');
 
       AddPostOrHeaderData(Headers, 'origin', 'https://www.tripadvisor.ru');
-      AddPostOrHeaderData(Headers, 'referer', aLink.Link);
+      AddPostOrHeaderData(Headers, 'referer', aLink.URL);
 
       XPuid := TStrTool.CutByKey(aPage, 'uid":"', '"');
       AddPostOrHeaderData(Headers, 'x-puid', XPuid);
       AddPostOrHeaderData(Headers, 'x-requested-with', 'XMLHttpRequest');
 
-      aBodyGroup.AddLink(inJobID, 7, 'https://www.tripadvisor.ru/DemandLoadAjax', PostData, Headers);
-    end;
+      aBodyGroup.AddLink(inJobID, 8, 'https://www.tripadvisor.ru/DemandLoadAjax', PostData, Headers);
+    end;}
+
+  EnLink := aLink.URL.Replace('.ru', '.com');
+  //aBodyGroup.AddLink(inJobID, 5, EnLink);
 end;
 
 procedure TModelTAParser.L3ProcessPageRegions(const aPage: string; var aBodyGroup: TGroup);
@@ -188,7 +208,7 @@ var
   RegionBlockArr: TArray<string>;
   RegionLink: string;
 begin
-  RegionBlockArr := TStrTool.CutArrayByKey(aPage, 'class="geo_wrap"', '</a>');
+  {RegionBlockArr := TStrTool.CutArrayByKey(aPage, 'class="geo_wrap"', '</a>');
 
   AddAsEachGroup(aBodyGroup, RegionBlockArr,
     procedure(const aArrRow: string; var aGroup: TGroup)
@@ -200,7 +220,7 @@ begin
 
   NextListLink := TStrTool.CutByKeyRearward(aPage, '#LOCATION_LIST" class="nav next', '"');
   if not NextListLink.IsEmpty then
-    aBodyGroup.AddLink(inJobID, 3, inDomain + NextListLink);
+    aBodyGroup.AddLink(inJobID, 3, inDomain + NextListLink);  }
 end;
 
 procedure TModelTAParser.L2ProcessPageRegion(const aPage: string; aLink: TLink; var aBodyGroup: TGroup);
@@ -217,7 +237,7 @@ var
   sNextOffset: string;
   XPuid: string;
 begin
-  HotelBlockArr := TStrTool.CutArrayByKey(aPage, '<div class="listing_title', '</a>');
+  {HotelBlockArr := TStrTool.CutArrayByKey(aPage, '<div class="listing_title', '</a>');
 
   AddAsEachGroup(aBodyGroup, HotelBlockArr,
     procedure(const aArrRow: string; var aGroup: TGroup)
@@ -233,11 +253,11 @@ begin
 
   if NextOffset > 0 then
     begin
-      Geo := TStrTool.CutByKey(aLink.Link, '-g', '-');
+      Geo := TStrTool.CutByKey(aLink.URL, '-g', '-');
       if Geo.IsEmpty then
         begin
-          Geo := aLink.PostDataItem['geo'];
-          XPuid := aLink.HeaderItem['x-puid'];
+          //Geo := aLink.PostDataItem['geo'];
+          //XPuid := aLink.HeaderItem['x-puid'];
         end
       else
         XPuid := TStrTool.CutByKey(aPage, 'setRequestHeader(''X-Puid'', ''', '''');
@@ -275,27 +295,29 @@ begin
   RegionListLink := TStrTool.CutByKey(aPage, 'leaf_geo_pagination', '#LEAF_GEO_LIST');
   RegionListLink := TStrTool.CutByKey(RegionListLink, '<a href="', '');
   if not RegionListLink.IsEmpty then
-    aBodyGroup.AddLink(inJobID, 3, inDomain + RegionListLink);
+    aBodyGroup.AddLink(inJobID, 3, inDomain + RegionListLink);  }
 end;
 
-procedure TModelTAParser.ProcessPageRoute(const aPage: string; aLink: TLink; var aBodyGroup: TGroup);
+{procedure TModelTAParser.ProcessPageRoute(const aPage: string; aLink: TLink; var aBodyGroup: TGroup);
 begin
   case aLink.Level of
     0: L0ProcessPageCountries(aPage, aBodyGroup);
     1: L1ProcessPageCategories(aPage, aBodyGroup);
     2: L2ProcessPageRegion(aPage, aLink, aBodyGroup);
     3: L3ProcessPageRegions(aPage, aBodyGroup);
-    4: L4ProcessPageObject(aPage, aLink, aBodyGroup);
-    5: L5ProcessPageEmail(aPage, aBodyGroup);
-    6: L6ProcessPageSite(aBodyGroup);
-    7: L7ProcessPageAbout(aPage, aBodyGroup);
+    4: L4ProcessPageObjectRU(aPage, aLink, aBodyGroup);
+    5: L5ProcessPageObjectEN(aPage, aLink, aBodyGroup);
+    6: L6ProcessPageEmail(aPage, aBodyGroup);
+    7: L7ProcessPageSite(aBodyGroup);
+    8: L8ProcessPageAboutRU(aPage, aBodyGroup);
+    9: L9ProcessPageAboutEN(aPage, aBodyGroup);
   end;
-end;
+end;}
 
 procedure TModelTAParser.L1ProcessPageCategories(const aPage: string; var aBodyGroup: TGroup);
 var
   HotelsLink: string;
-begin
+begin     {
   HotelsLink := TStrTool.CutByKey(aPage, '-hotels"><a href="', '"');
   if not HotelsLink.isEmpty then
     begin
@@ -306,7 +328,7 @@ begin
             aGroup.AddLink(inJobID, 2, inDomain + aArrRow);
           end
       );
-    end;
+    end;   }
 
   //Group := aBodyGroup.CreateChildGroup;
   //aBodyGroup.AddRecord('test', 'fdsfdsf');
@@ -316,23 +338,19 @@ end;
 procedure TModelTAParser.L0ProcessPageCountries(const aPage: string; var aBodyGroup: TGroup);
 var
   CountriesBlock: string;
-  Country: string;
   CountryLink: string;
   CountryArr: TArray<string>;
 begin
-  CountriesBlock := TStrTool.CutByKey(aPage, 'div class="world_destinations container"', '</div>');
+  {CountriesBlock := TStrTool.CutByKey(aPage, 'div class="world_destinations container"', '</div>');
   CountryArr := TStrTool.CutArrayByKey(CountriesBlock, '<a href="', '</a>');
 
   AddAsEachGroup(aBodyGroup, CountryArr,
     procedure(const aArrRow: string; var aGroup: TGroup)
       begin
-        Country := TStrTool.CutByKey(aArrRow, '>', '');
-        aGroup.AddRecord('ru_country', Country);
-
         CountryLink := inDomain + TStrTool.CutByKey(aArrRow, '', '"');
         aGroup.AddLink(inJobID, 1, CountryLink);
       end
-  );
+  );   }
 end;
 
 end.

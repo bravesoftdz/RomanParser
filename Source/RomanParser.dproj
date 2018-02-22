@@ -112,7 +112,7 @@
         <DCCReference Include="..\..\Libs\Delphi\API_DB_SQLite.pas"/>
         <DCCReference Include="mWikiConvert.pas"/>
         <DCCReference Include="eConvertedLinks.pas"/>
-        <DCCReference Include="..\..\Libs\DelphiTemplates\Parser\eCommon.pas"/>
+        <DCCReference Include="..\..\Libs\DelphiTemplates\Parser_Core\eCommon.pas"/>
         <DCCReference Include="eExtLink.pas"/>
         <DCCReference Include="eExtJob.pas"/>
         <DCCReference Include="eOutput.pas"/>
@@ -122,12 +122,15 @@
         <DCCReference Include="..\..\Libs\Delphi\API_HTTP.pas"/>
         <DCCReference Include="..\..\Libs\Delphi\API_Strings.pas"/>
         <DCCReference Include="mTAParser.pas"/>
-        <DCCReference Include="..\..\Libs\DelphiTemplates\Parser\eLink.pas"/>
-        <DCCReference Include="..\..\Libs\DelphiTemplates\Parser\eJob.pas"/>
-        <DCCReference Include="..\..\Libs\DelphiTemplates\Parser\eGroup.pas"/>
-        <DCCReference Include="..\..\Libs\DelphiTemplates\Parser\eRecord.pas"/>
-        <DCCReference Include="..\..\Libs\DelphiTemplates\Parser\mParserBase.pas"/>
+        <DCCReference Include="..\..\Libs\DelphiTemplates\Parser_Core\eLink.pas"/>
+        <DCCReference Include="..\..\Libs\DelphiTemplates\Parser_Core\eJob.pas"/>
+        <DCCReference Include="..\..\Libs\DelphiTemplates\Parser_Core\eGroup.pas"/>
+        <DCCReference Include="..\..\Libs\DelphiTemplates\Parser_Core\eRecord.pas"/>
+        <DCCReference Include="..\..\Libs\DelphiTemplates\Parser_Core\mParserBase.pas"/>
         <DCCReference Include="mTestParser.pas"/>
+        <DCCReference Include="..\..\Libs\DelphiTemplates\Parser_OnRequests\eIternalRequests.pas"/>
+        <DCCReference Include="..\..\Libs\DelphiTemplates\Parser_Core\mParserCore.pas"/>
+        <DCCReference Include="..\..\Libs\DelphiTemplates\Parser_OnRequests\mParserOnRequests.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

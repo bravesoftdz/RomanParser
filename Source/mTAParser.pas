@@ -26,7 +26,7 @@ type
   protected
     procedure AfterCreate; override;
     //procedure BeforePageLoad(aIdCookieManager: TIdCookieManager; aLink: TLink); override;
-    //procedure ProcessPageRoute(const aPage: string; aLink: TLink; var aBodyGroup: TGroup); override;
+    procedure ProcessPageRoute(const aPage: string; aLink: TLink; var aBodyGroup: TGroup); override;
   end;
 
 implementation
@@ -237,7 +237,7 @@ var
   sNextOffset: string;
   XPuid: string;
 begin
-  {HotelBlockArr := TStrTool.CutArrayByKey(aPage, '<div class="listing_title', '</a>');
+  HotelBlockArr := TStrTool.CutArrayByKey(aPage, '<div class="listing_title', '</a>');
 
   AddAsEachGroup(aBodyGroup, HotelBlockArr,
     procedure(const aArrRow: string; var aGroup: TGroup)
@@ -262,7 +262,7 @@ begin
       else
         XPuid := TStrTool.CutByKey(aPage, 'setRequestHeader(''X-Puid'', ''', '''');
 
-      AddPostOrHeaderData(PostData, 'seen', '0');
+      {AddPostOrHeaderData(PostData, 'seen', '0');
       AddPostOrHeaderData(PostData, 'sequence', '1');
       AddPostOrHeaderData(PostData, 'geo', Geo);
       AddPostOrHeaderData(PostData, 'requestingServlet', 'Hotels');
@@ -277,7 +277,7 @@ begin
       AddPostOrHeaderData(PostData, 'displayedSortOrder', 'recommended');
 
       AddPostOrHeaderData(Headers, 'x-puid', XPuid);
-      AddPostOrHeaderData(Headers, 'x-requested-with', 'XMLHttpRequest');
+      AddPostOrHeaderData(Headers, 'x-requested-with', 'XMLHttpRequest'); }
 
       aBodyGroup.AddLink(inJobID, 2, 'https://www.tripadvisor.ru/Hotels', PostData, Headers);
     end;
@@ -295,29 +295,29 @@ begin
   RegionListLink := TStrTool.CutByKey(aPage, 'leaf_geo_pagination', '#LEAF_GEO_LIST');
   RegionListLink := TStrTool.CutByKey(RegionListLink, '<a href="', '');
   if not RegionListLink.IsEmpty then
-    aBodyGroup.AddLink(inJobID, 3, inDomain + RegionListLink);  }
+    aBodyGroup.AddLink(inJobID, 3, inDomain + RegionListLink);
 end;
 
-{procedure TModelTAParser.ProcessPageRoute(const aPage: string; aLink: TLink; var aBodyGroup: TGroup);
+procedure TModelTAParser.ProcessPageRoute(const aPage: string; aLink: TLink; var aBodyGroup: TGroup);
 begin
   case aLink.Level of
     0: L0ProcessPageCountries(aPage, aBodyGroup);
     1: L1ProcessPageCategories(aPage, aBodyGroup);
     2: L2ProcessPageRegion(aPage, aLink, aBodyGroup);
-    3: L3ProcessPageRegions(aPage, aBodyGroup);
-    4: L4ProcessPageObjectRU(aPage, aLink, aBodyGroup);
-    5: L5ProcessPageObjectEN(aPage, aLink, aBodyGroup);
-    6: L6ProcessPageEmail(aPage, aBodyGroup);
-    7: L7ProcessPageSite(aBodyGroup);
-    8: L8ProcessPageAboutRU(aPage, aBodyGroup);
-    9: L9ProcessPageAboutEN(aPage, aBodyGroup);
+    //3: L3ProcessPageRegions(aPage, aBodyGroup);
+    //4: L4ProcessPageObjectRU(aPage, aLink, aBodyGroup);
+    //5: L5ProcessPageObjectEN(aPage, aLink, aBodyGroup);
+    //6: L6ProcessPageEmail(aPage, aBodyGroup);
+    //7: L7ProcessPageSite(aBodyGroup);
+    //8: L8ProcessPageAboutRU(aPage, aBodyGroup);
+    //9: L9ProcessPageAboutEN(aPage, aBodyGroup);
   end;
-end;}
+end;
 
 procedure TModelTAParser.L1ProcessPageCategories(const aPage: string; var aBodyGroup: TGroup);
 var
   HotelsLink: string;
-begin     {
+begin
   HotelsLink := TStrTool.CutByKey(aPage, '-hotels"><a href="', '"');
   if not HotelsLink.isEmpty then
     begin
@@ -328,11 +328,10 @@ begin     {
             aGroup.AddLink(inJobID, 2, inDomain + aArrRow);
           end
       );
-    end;   }
+    end;
 
-  //Group := aBodyGroup.CreateChildGroup;
-  //aBodyGroup.AddRecord('test', 'fdsfdsf');
-  //AddLink;
+  // Рестораны
+  // Места
 end;
 
 procedure TModelTAParser.L0ProcessPageCountries(const aPage: string; var aBodyGroup: TGroup);
@@ -341,7 +340,7 @@ var
   CountryLink: string;
   CountryArr: TArray<string>;
 begin
-  {CountriesBlock := TStrTool.CutByKey(aPage, 'div class="world_destinations container"', '</div>');
+  CountriesBlock := TStrTool.CutByKey(aPage, 'div class="world_destinations container"', '</div>');
   CountryArr := TStrTool.CutArrayByKey(CountriesBlock, '<a href="', '</a>');
 
   AddAsEachGroup(aBodyGroup, CountryArr,
@@ -350,7 +349,7 @@ begin
         CountryLink := inDomain + TStrTool.CutByKey(aArrRow, '', '"');
         aGroup.AddLink(inJobID, 1, CountryLink);
       end
-  );   }
+  );
 end;
 
 end.

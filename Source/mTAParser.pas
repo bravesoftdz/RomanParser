@@ -4,6 +4,7 @@ interface
 
 uses
   eGroup,
+  eIternalRequests,
   eLink,
   IdCookieManager,
   mParserOnRequests;
@@ -23,6 +24,7 @@ type
     procedure L8ProcessPageAboutRU(const aPage: string; var aBodyGroup: TGroup);
     procedure L5ProcessPageObjectEN(const aPage: string; aLink: TLink; var aBodyGroup: TGroup);
     procedure L9ProcessPageAboutEN(const aPage: string; var aBodyGroup: TGroup);
+    procedure RequestProcessRegion(const aPage: string; aIternalRequest: TIternalRequest; aGroup: TGroup);
   protected
     procedure AfterCreate; override;
     //procedure BeforePageLoad(aIdCookieManager: TIdCookieManager; aLink: TLink); override;
@@ -38,6 +40,11 @@ uses
   IdURI,
   System.Classes,
   System.SysUtils;
+
+procedure TModelTAParser.RequestProcessRegion(const aPage: string; aIternalRequest: TIternalRequest; aGroup: TGroup);
+begin
+
+end;
 
 procedure TModelTAParser.L9ProcessPageAboutEN(const aPage: string; var aBodyGroup: TGroup);
 begin
@@ -229,6 +236,7 @@ var
   Headers: string;
   HotelBlockArr: TArray<string>;
   HotelLink: string;
+  IternalRequest: TIternalRequest;
   NextOffset: Integer;
   PostData: string;
   RegionBlockArr: TArray<string>;
@@ -254,35 +262,31 @@ begin
   if NextOffset > 0 then
     begin
       Geo := TStrTool.CutByKey(aLink.URL, '-g', '-');
-      if Geo.IsEmpty then
-        begin
-          //Geo := aLink.PostDataItem['geo'];
-          //XPuid := aLink.HeaderItem['x-puid'];
-        end
-      else
-        XPuid := TStrTool.CutByKey(aPage, 'setRequestHeader(''X-Puid'', ''', '''');
+      XPuid := TStrTool.CutByKey(aPage, 'setRequestHeader(''X-Puid'', ''', '''');
 
-      {AddPostOrHeaderData(PostData, 'seen', '0');
-      AddPostOrHeaderData(PostData, 'sequence', '1');
-      AddPostOrHeaderData(PostData, 'geo', Geo);
-      AddPostOrHeaderData(PostData, 'requestingServlet', 'Hotels');
-      AddPostOrHeaderData(PostData, 'refineForm', 'true');
-      AddPostOrHeaderData(PostData, 'hs', '');
-      AddPostOrHeaderData(PostData, 'adults', '2');
-      AddPostOrHeaderData(PostData, 'rooms', '1');
-      AddPostOrHeaderData(PostData, 'o', 'a' + sNextOffset);
-      AddPostOrHeaderData(PostData, 'pageSize', '');
-      AddPostOrHeaderData(PostData, 'rad', '0');
-      AddPostOrHeaderData(PostData, 'dateBumped', 'NONE');
-      AddPostOrHeaderData(PostData, 'displayedSortOrder', 'recommended');
+      //IternalRequest := aLink.AddIternalRequest('https://www.tripadvisor.ru/Hotels');
 
-      AddPostOrHeaderData(Headers, 'x-puid', XPuid);
-      AddPostOrHeaderData(Headers, 'x-requested-with', 'XMLHttpRequest'); }
+      IternalRequest.PostDataItem['seen'] := '0';
+      IternalRequest.PostDataItem['sequence'] := '1';
+      IternalRequest.PostDataItem['geo'] := Geo;
+      IternalRequest.PostDataItem['requestingServlet'] := 'Hotels';
+      IternalRequest.PostDataItem['refineForm'] := 'true';
+      IternalRequest.PostDataItem['hs'] := '';
+      IternalRequest.PostDataItem['adults'] := '2';
+      IternalRequest.PostDataItem['rooms'] := '1';
+      IternalRequest.PostDataItem['o'] := 'a' + sNextOffset;
+      IternalRequest.PostDataItem['pageSize'] := '';
+      IternalRequest.PostDataItem['rad'] := '0';
+      IternalRequest.PostDataItem['dateBumped'] := 'NONE';
+      IternalRequest.PostDataItem['displayedSortOrder'] := 'recommended';
 
-      aBodyGroup.AddLink(inJobID, 2, 'https://www.tripadvisor.ru/Hotels', PostData, Headers);
+      IternalRequest.HeaderItem['x-puid'] := XPuid;
+      IternalRequest.HeaderItem['x-requested-with'] := 'XMLHttpRequest';
+
+      ProcessRequest(IternalRequest, aBodyGroup, RequestProcessRegion);
     end;
 
-  RegionBlockArr := TStrTool.CutArrayByKey(aPage, 'class="geo_wrap"', '</a>');
+  {RegionBlockArr := TStrTool.CutArrayByKey(aPage, 'class="geo_wrap"', '</a>');
 
   AddAsEachGroup(aBodyGroup, RegionBlockArr,
     procedure(const aArrRow: string; var aGroup: TGroup)
@@ -295,7 +299,7 @@ begin
   RegionListLink := TStrTool.CutByKey(aPage, 'leaf_geo_pagination', '#LEAF_GEO_LIST');
   RegionListLink := TStrTool.CutByKey(RegionListLink, '<a href="', '');
   if not RegionListLink.IsEmpty then
-    aBodyGroup.AddLink(inJobID, 3, inDomain + RegionListLink);
+    aBodyGroup.AddLink(inJobID, 3, inDomain + RegionListLink); }
 end;
 
 procedure TModelTAParser.ProcessPageRoute(const aPage: string; aLink: TLink; var aBodyGroup: TGroup);
